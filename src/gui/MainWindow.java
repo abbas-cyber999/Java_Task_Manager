@@ -1,160 +1,265 @@
 package gui;
 
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
 import java.util.ArrayList;
-import java.awt.Color;
-import java.awt.Font;
 
 public class MainWindow {
 
     private JFrame frame;
 
-    private HeaderLabel titleLabel;
-    private TaskLabel taskLabel;
+    private JPanel mainPanel, headerPanel, inputPanel, todoPanel, donePanel;
 
-    private JLabel listLabel;
-    private JLabel exampleTask1;
-    private JLabel exampleTask2;
     private JLabel counterLabel;
+    private JTextField taskField;
 
-    private TaskTextField taskField;
+    private JButton addButton, deleteButton, doneButton;
+    private JProgressBar progressBar;
 
-    private AddButton addButton;
-    private DeleteButton deleteButton;
-
-    private int taskYPosition = 340;
-
-    private ArrayList<JLabel> tasks = new ArrayList<>();
+    private ArrayList<JCheckBox> todoTasks = new ArrayList<>();
+    private ArrayList<JCheckBox> doneTasks = new ArrayList<>();
 
     public MainWindow() {
-
         frame = new JFrame();
-
         createComponents();
-        addComponents();
         setupFrame();
     }
 
     private void createComponents() {
 
-        frame.getContentPane().setBackground(new Color(245, 247, 250));
+        mainPanel = new JPanel(null);
+        mainPanel.setBackground(new Color(236, 240, 245));
 
-        titleLabel = new HeaderLabel();
-        titleLabel.setForeground(new Color(52, 73, 94));
+        headerPanel = createCard(30, 20, 540, 90);
+        headerPanel.setBackground(new Color(44, 62, 80));
 
-        taskLabel = new TaskLabel();
-        taskLabel.setForeground(new Color(44, 62, 80));
+        JLabel titleLabel = new JLabel("ToDo Dashboard");
+        titleLabel.setBounds(25, 15, 300, 35);
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
 
-        counterLabel = new JLabel("Aufgaben: 0");
-        counterLabel.setBounds(20, 20, 150, 30);
-        counterLabel.setForeground(new Color(231, 76, 60));
-        counterLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        JLabel subtitleLabel = new JLabel("Aufgaben verwalten wie ein Profi");
+        subtitleLabel.setBounds(27, 50, 300, 25);
+        subtitleLabel.setForeground(new Color(189, 195, 199));
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        listLabel = new JLabel("Aufgabenliste:");
-        listLabel.setBounds(180, 240, 150, 30);
-        listLabel.setForeground(new Color(41, 128, 185));
-        listLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        counterLabel = new JLabel("Offen: 0 | Erledigt: 0");
+        counterLabel.setBounds(360, 25, 170, 30);
+        counterLabel.setForeground(Color.WHITE);
+        counterLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        exampleTask1 = new JLabel("- Java lernen");
-        exampleTask1.setBounds(190, 280, 200, 30);
-        exampleTask1.setForeground(new Color(39, 174, 96));
-        exampleTask1.setFont(new Font("Arial", Font.PLAIN, 14));
+        progressBar = new JProgressBar(0, 100);
+        progressBar.setBounds(360, 58, 150, 12);
 
-        exampleTask2 = new JLabel("- Mockup abgeben");
-        exampleTask2.setBounds(190, 310, 200, 30);
-        exampleTask2.setForeground(new Color(39, 174, 96));
-        exampleTask2.setFont(new Font("Arial", Font.PLAIN, 14));
+        headerPanel.add(titleLabel);
+        headerPanel.add(subtitleLabel);
+        headerPanel.add(counterLabel);
+        headerPanel.add(progressBar);
 
-        taskField = new TaskTextField();
+        inputPanel = createCard(30, 130, 540, 100);
 
-        addButton = new AddButton();
-        deleteButton = new DeleteButton();
+        JLabel inputLabel = new JLabel("Neue Aufgabe");
+        inputLabel.setBounds(25, 15, 130, 25);
+        inputLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        addButton.setBackground(new Color(46, 204, 113));
-        addButton.setForeground(Color.WHITE);
-        addButton.setFont(new Font("Arial", Font.BOLD, 13));
+        taskField = new JTextField();
+        taskField.setBounds(25, 50, 210, 35);
+        taskField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        deleteButton.setBackground(new Color(231, 76, 60));
-        deleteButton.setForeground(Color.WHITE);
-        deleteButton.setFont(new Font("Arial", Font.BOLD, 13));
+        addButton = createButton("Hinzufügen", new Color(46, 204, 113));
+        addButton.setBounds(245, 50, 100, 35);
 
-        addButton.addActionListener(e -> {
+        doneButton = createButton("Erledigt", new Color(52, 152, 219));
+        doneButton.setBounds(355, 50, 80, 35);
 
-            String taskText = taskField.getText();
+        deleteButton = createButton("Löschen", new Color(231, 76, 60));
+        deleteButton.setBounds(445, 50, 80, 35);
 
-            if (taskText.isEmpty()) {
+        inputPanel.add(inputLabel);
+        inputPanel.add(taskField);
+        inputPanel.add(addButton);
+        inputPanel.add(doneButton);
+        inputPanel.add(deleteButton);
 
-                JOptionPane.showMessageDialog(
-                    frame,
-                    "Bitte geben Sie eine Aufgabe ein!"
-                );
+        todoPanel = createCard(30, 250, 255, 260);
+        donePanel = createCard(315, 250, 255, 260);
 
-            } else {
+        addButton.addActionListener(e -> addTask());
+        doneButton.addActionListener(e -> markSelectedAsDone());
+        deleteButton.addActionListener(e -> deleteSelectedTasks());
 
-                JLabel newTask = new JLabel("- " + taskText);
-                newTask.setBounds(190, taskYPosition, 250, 30);
-                newTask.setForeground(new Color(142, 68, 173));
-                newTask.setFont(new Font("Arial", Font.PLAIN, 14));
+        createTask("Java lernen");
+        createTask("Mockup abgeben");
 
-                frame.add(newTask);
-                tasks.add(newTask);
-
-                taskYPosition += 30;
-
-                taskField.setText("");
-
-                counterLabel.setText("Aufgaben: " + tasks.size());
-
-                frame.repaint();
-            }
-        });
-
-        deleteButton.addActionListener(e -> {
-
-            if (!tasks.isEmpty()) {
-
-                JLabel lastTask = tasks.get(tasks.size() - 1);
-
-                frame.remove(lastTask);
-                tasks.remove(lastTask);
-
-                taskYPosition -= 30;
-
-                counterLabel.setText("Aufgaben: " + tasks.size());
-
-                frame.repaint();
-
-            } else {
-
-                JOptionPane.showMessageDialog(
-                    frame,
-                    "Es gibt keine Aufgabe zum Löschen!"
-                );
-            }
-        });
+        mainPanel.add(headerPanel);
+        mainPanel.add(inputPanel);
+        mainPanel.add(todoPanel);
+        mainPanel.add(donePanel);
     }
 
-    private void addComponents() {
+    private JPanel createCard(int x, int y, int width, int height) {
+        JPanel panel = new JPanel(null);
+        panel.setBounds(x, y, width, height);
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        return panel;
+    }
 
-        frame.add(titleLabel);
-        frame.add(taskLabel);
-        frame.add(counterLabel);
-        frame.add(taskField);
-        frame.add(addButton);
-        frame.add(deleteButton);
-        frame.add(listLabel);
-        frame.add(exampleTask1);
-        frame.add(exampleTask2);
+    private JButton createButton(String text, Color color) {
+        JButton button = new JButton(text);
+        button.setBackground(color);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(color.darker());
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(color);
+            }
+        });
+
+        return button;
+    }
+
+    private void addTask() {
+        String text = taskField.getText().trim();
+
+        if (text.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Bitte geben Sie eine Aufgabe ein!");
+            return;
+        }
+
+        createTask(text);
+        taskField.setText("");
+    }
+
+    private void createTask(String text) {
+        JCheckBox task = new JCheckBox(text);
+        task.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        task.setForeground(new Color(52, 73, 94));
+        task.setBackground(Color.WHITE);
+
+        todoTasks.add(task);
+        refreshTasks();
+    }
+
+    private void markSelectedAsDone() {
+        boolean moved = false;
+
+        for (int i = todoTasks.size() - 1; i >= 0; i--) {
+            JCheckBox task = todoTasks.get(i);
+
+            if (task.isSelected()) {
+                todoTasks.remove(i);
+
+                task.setText("<html><s>✔ " + task.getText() + "</s></html>");
+                task.setForeground(new Color(39, 174, 96));
+                task.setSelected(false);
+
+                doneTasks.add(task);
+                moved = true;
+            }
+        }
+
+        if (!moved) {
+            JOptionPane.showMessageDialog(frame, "Bitte wählen Sie zuerst eine offene Aufgabe aus!");
+        }
+
+        refreshTasks();
+    }
+
+    private void deleteSelectedTasks() {
+        boolean deleted = false;
+
+        for (int i = todoTasks.size() - 1; i >= 0; i--) {
+            if (todoTasks.get(i).isSelected()) {
+                todoTasks.remove(i);
+                deleted = true;
+            }
+        }
+
+        for (int i = doneTasks.size() - 1; i >= 0; i--) {
+            if (doneTasks.get(i).isSelected()) {
+                doneTasks.remove(i);
+                deleted = true;
+            }
+        }
+
+        if (!deleted) {
+            JOptionPane.showMessageDialog(frame, "Bitte wählen Sie zuerst eine Aufgabe zum Löschen aus!");
+        }
+
+        refreshTasks();
+    }
+
+    private void refreshTasks() {
+
+        todoPanel.removeAll();
+        donePanel.removeAll();
+
+        JLabel todoTitle = new JLabel("📌 Offene Aufgaben");
+        todoTitle.setBounds(20, 15, 210, 30);
+        todoTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        todoTitle.setForeground(new Color(41, 128, 185));
+
+        JLabel doneTitle = new JLabel("✅ Erledigte Aufgaben");
+        doneTitle.setBounds(20, 15, 220, 30);
+        doneTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        doneTitle.setForeground(new Color(39, 174, 96));
+
+        todoPanel.add(todoTitle);
+        donePanel.add(doneTitle);
+
+        int y = 55;
+
+        for (JCheckBox task : todoTasks) {
+            task.setBounds(20, y, 210, 30);
+            todoPanel.add(task);
+            y += 35;
+        }
+
+        y = 55;
+
+        for (JCheckBox task : doneTasks) {
+            task.setBounds(20, y, 210, 30);
+            donePanel.add(task);
+            y += 35;
+        }
+
+        updateCounter();
+
+        todoPanel.revalidate();
+        todoPanel.repaint();
+        donePanel.revalidate();
+        donePanel.repaint();
+    }
+
+    private void updateCounter() {
+        int todo = todoTasks.size();
+        int done = doneTasks.size();
+        int total = todo + done;
+
+        counterLabel.setText("Offen: " + todo + " | Erledigt: " + done);
+
+        if (total == 0) {
+            progressBar.setValue(0);
+        } else {
+            progressBar.setValue((done * 100) / total);
+        }
     }
 
     private void setupFrame() {
-
-        frame.setTitle("ToDo App");
-        frame.setSize(500, 500);
-        frame.setLayout(null);
+        frame.setTitle("Professional ToDo App");
+        frame.setSize(620, 580);
+        frame.setContentPane(mainPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 }
