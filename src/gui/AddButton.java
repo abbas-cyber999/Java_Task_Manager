@@ -1,15 +1,20 @@
 package gui;
 
-import javax.swing.JButton;
-
 import util.UIConstants;
 
-public class AddButton extends JButton {
+/**
+ * Button for adding a task.
+ *
+ * @author Abbas
+ */
+public class AddButton extends AppButton {
 
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * Creates the add button.
+     */
     public AddButton() {
-
-        super(UIConstants.ADD_BUTTON_TEXT);
-
-        setBounds(110, 150, 130, 35);
+        super("Hinzufügen", UIConstants.GREEN);
     }
 }

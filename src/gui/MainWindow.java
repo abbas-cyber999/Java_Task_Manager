@@ -1,53 +1,124 @@
 package gui;
 
+import model.Task;
+import util.TaskStorage;
+import util.UIConstants;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 
+/**
+ * Main window of the ToDo application.
+ *
+ * @author Abbas
+ */
 public class MainWindow {
 
     private JFrame frame;
 
-    private JPanel mainPanel, headerPanel, inputPanel, todoPanel, donePanel;
+    private JPanel mainPanel;
+    private JPanel headerPanel;
+    private JPanel inputPanel;
+    private JPanel todoPanel;
+    private JPanel donePanel;
 
     private JLabel counterLabel;
-    private JTextField taskField;
+    private TaskTextField taskField;
 
-    private JButton addButton, deleteButton, doneButton;
+    private AddButton addButton;
+    private DeleteButton deleteButton;
+    private AppButton doneButton;
+
     private JProgressBar progressBar;
 
-    private ArrayList<JCheckBox> todoTasks = new ArrayList<>();
-    private ArrayList<JCheckBox> doneTasks = new ArrayList<>();
+    private ArrayList<Task> tasks;
+    private ArrayList<JCheckBox> todoBoxes;
+    private ArrayList<JCheckBox> doneBoxes;
 
+    private TaskStorage storage;
+
+    /**
+     * Creates the main window.
+     */
     public MainWindow() {
-        frame = new JFrame();
+        storage = new TaskStorage();
+        tasks = storage.loadTasks();
+        todoBoxes = new ArrayList<>();
+        doneBoxes = new ArrayList<>();
+
+        createDefaultTasks();
+        createFrame();
         createComponents();
         setupFrame();
+        refreshTasks();
     }
 
+    /**
+     * Creates example tasks when the program starts for the first time.
+     */
+    private void createDefaultTasks() {
+        if (!storage.saveFileExists()) {
+            tasks.add(new Task("Java lernen"));
+            tasks.add(new Task("Mockup abgeben"));
+            storage.saveTasks(tasks);
+        }
+    }
+
+    /**
+     * Creates the frame.
+     */
+    private void createFrame() {
+        frame = new JFrame();
+        frame.setTitle("Professional ToDo App");
+        frame.setSize(620, 580);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+    }
+
+    /**
+     * Creates all components.
+     */
     private void createComponents() {
+        createMainPanel();
+        createHeaderPanel();
+        createInputPanel();
+        createTaskPanels();
 
+        mainPanel.add(headerPanel);
+        mainPanel.add(inputPanel);
+        mainPanel.add(todoPanel);
+        mainPanel.add(donePanel);
+    }
+
+    /**
+     * Creates the main panel.
+     */
+    private void createMainPanel() {
         mainPanel = new JPanel(null);
-        mainPanel.setBackground(new Color(236, 240, 245));
+        mainPanel.setBackground(UIConstants.BACKGROUND);
+    }
 
+    /**
+     * Creates the header panel.
+     */
+    private void createHeaderPanel() {
         headerPanel = createCard(30, 20, 540, 90);
-        headerPanel.setBackground(new Color(44, 62, 80));
+        headerPanel.setBackground(UIConstants.HEADER);
 
-        JLabel titleLabel = new JLabel("ToDo Dashboard");
+        HeaderLabel titleLabel = new HeaderLabel();
         titleLabel.setBounds(25, 15, 300, 35);
-        titleLabel.setForeground(Color.WHITE);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
 
         JLabel subtitleLabel = new JLabel("Aufgaben verwalten wie ein Profi");
         subtitleLabel.setBounds(27, 50, 300, 25);
         subtitleLabel.setForeground(new Color(189, 195, 199));
-        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        subtitleLabel.setFont(UIConstants.NORMAL_FONT);
 
         counterLabel = new JLabel("Offen: 0 | Erledigt: 0");
         counterLabel.setBounds(360, 25, 170, 30);
         counterLabel.setForeground(Color.WHITE);
-        counterLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        counterLabel.setFont(UIConstants.BOLD_FONT);
 
         progressBar = new JProgressBar(0, 100);
         progressBar.setBounds(360, 58, 150, 12);
@@ -56,48 +127,58 @@ public class MainWindow {
         headerPanel.add(subtitleLabel);
         headerPanel.add(counterLabel);
         headerPanel.add(progressBar);
+    }
 
+    /**
+     * Creates the input panel.
+     */
+    private void createInputPanel() {
         inputPanel = createCard(30, 130, 540, 100);
 
         JLabel inputLabel = new JLabel("Neue Aufgabe");
         inputLabel.setBounds(25, 15, 130, 25);
-        inputLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        inputLabel.setFont(UIConstants.BOLD_FONT);
 
-        taskField = new JTextField();
+        taskField = new TaskTextField();
         taskField.setBounds(25, 50, 210, 35);
-        taskField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        addButton = createButton("Hinzufügen", new Color(46, 204, 113));
+        addButton = new AddButton();
         addButton.setBounds(245, 50, 100, 35);
 
-        doneButton = createButton("Erledigt", new Color(52, 152, 219));
+        doneButton = new AppButton("Erledigt", UIConstants.BLUE);
         doneButton.setBounds(355, 50, 80, 35);
 
-        deleteButton = createButton("Löschen", new Color(231, 76, 60));
+        deleteButton = new DeleteButton();
         deleteButton.setBounds(445, 50, 80, 35);
+
+        addButton.addActionListener(e -> addTask());
+        doneButton.addActionListener(e -> markSelectedAsDone());
+        deleteButton.addActionListener(e -> deleteSelectedTasks());
 
         inputPanel.add(inputLabel);
         inputPanel.add(taskField);
         inputPanel.add(addButton);
         inputPanel.add(doneButton);
         inputPanel.add(deleteButton);
-
-        todoPanel = createCard(30, 250, 255, 260);
-        donePanel = createCard(315, 250, 255, 260);
-
-        addButton.addActionListener(e -> addTask());
-        doneButton.addActionListener(e -> markSelectedAsDone());
-        deleteButton.addActionListener(e -> deleteSelectedTasks());
-
-        createTask("Java lernen");
-        createTask("Mockup abgeben");
-
-        mainPanel.add(headerPanel);
-        mainPanel.add(inputPanel);
-        mainPanel.add(todoPanel);
-        mainPanel.add(donePanel);
     }
 
+    /**
+     * Creates task panels.
+     */
+    private void createTaskPanels() {
+        todoPanel = createCard(30, 250, 255, 260);
+        donePanel = createCard(315, 250, 255, 260);
+    }
+
+    /**
+     * Creates a card panel.
+     *
+     * @param x x position
+     * @param y y position
+     * @param width panel width
+     * @param height panel height
+     * @return new panel
+     */
     private JPanel createCard(int x, int y, int width, int height) {
         JPanel panel = new JPanel(null);
         panel.setBounds(x, y, width, height);
@@ -106,146 +187,186 @@ public class MainWindow {
         return panel;
     }
 
-    private JButton createButton(String text, Color color) {
-        JButton button = new JButton(text);
-        button.setBackground(color);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setBorderPainted(false);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
-
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setBackground(color.darker());
-            }
-
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setBackground(color);
-            }
-        });
-
-        return button;
-    }
-
+    /**
+     * Adds a new task.
+     */
     private void addTask() {
         String text = taskField.getText().trim();
 
         if (text.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Bitte geben Sie eine Aufgabe ein!");
+            showMessage("Bitte geben Sie eine Aufgabe ein!");
             return;
         }
 
-        createTask(text);
+        tasks.add(new Task(text));
         taskField.setText("");
+        saveAndRefresh();
     }
 
-    private void createTask(String text) {
-        JCheckBox task = new JCheckBox(text);
-        task.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        task.setForeground(new Color(52, 73, 94));
-        task.setBackground(Color.WHITE);
-
-        todoTasks.add(task);
-        refreshTasks();
-    }
-
+    /**
+     * Marks selected tasks as done.
+     */
     private void markSelectedAsDone() {
-        boolean moved = false;
+        boolean changed = false;
 
-        for (int i = todoTasks.size() - 1; i >= 0; i--) {
-            JCheckBox task = todoTasks.get(i);
-
-            if (task.isSelected()) {
-                todoTasks.remove(i);
-
-                task.setText("<html><s>✔ " + task.getText() + "</s></html>");
-                task.setForeground(new Color(39, 174, 96));
-                task.setSelected(false);
-
-                doneTasks.add(task);
-                moved = true;
+        for (JCheckBox box : todoBoxes) {
+            if (box.isSelected()) {
+                Task task = (Task) box.getClientProperty("task");
+                task.markAsDone();
+                changed = true;
             }
         }
 
-        if (!moved) {
-            JOptionPane.showMessageDialog(frame, "Bitte wählen Sie zuerst eine offene Aufgabe aus!");
+        if (!changed) {
+            showMessage("Bitte wählen Sie zuerst eine offene Aufgabe aus!");
+            return;
         }
 
-        refreshTasks();
+        saveAndRefresh();
     }
 
+    /**
+     * Deletes selected tasks.
+     */
     private void deleteSelectedTasks() {
         boolean deleted = false;
 
-        for (int i = todoTasks.size() - 1; i >= 0; i--) {
-            if (todoTasks.get(i).isSelected()) {
-                todoTasks.remove(i);
-                deleted = true;
-            }
-        }
-
-        for (int i = doneTasks.size() - 1; i >= 0; i--) {
-            if (doneTasks.get(i).isSelected()) {
-                doneTasks.remove(i);
-                deleted = true;
-            }
-        }
+        deleted = deleteSelectedFromList(todoBoxes) || deleted;
+        deleted = deleteSelectedFromList(doneBoxes) || deleted;
 
         if (!deleted) {
-            JOptionPane.showMessageDialog(frame, "Bitte wählen Sie zuerst eine Aufgabe zum Löschen aus!");
+            showMessage("Bitte wählen Sie zuerst eine Aufgabe zum Löschen aus!");
+            return;
         }
 
+        saveAndRefresh();
+    }
+
+    /**
+     * Deletes selected tasks from a checkbox list.
+     *
+     * @param boxes checkbox list
+     * @return true if at least one task was deleted
+     */
+    private boolean deleteSelectedFromList(ArrayList<JCheckBox> boxes) {
+        boolean deleted = false;
+
+        for (JCheckBox box : boxes) {
+            if (box.isSelected()) {
+                Task task = (Task) box.getClientProperty("task");
+                tasks.remove(task);
+                deleted = true;
+            }
+        }
+
+        return deleted;
+    }
+
+    /**
+     * Saves and refreshes the program.
+     */
+    private void saveAndRefresh() {
+        storage.saveTasks(tasks);
         refreshTasks();
     }
 
+    /**
+     * Refreshes the task lists.
+     */
     private void refreshTasks() {
+        clearPanels();
+        addPanelTitles();
+        fillPanels();
+        updateCounter();
+        repaintPanels();
+    }
 
+    /**
+     * Clears panels and checkbox lists.
+     */
+    private void clearPanels() {
         todoPanel.removeAll();
         donePanel.removeAll();
+        todoBoxes.clear();
+        doneBoxes.clear();
+    }
 
-        JLabel todoTitle = new JLabel("📌 Offene Aufgaben");
-        todoTitle.setBounds(20, 15, 210, 30);
-        todoTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
-        todoTitle.setForeground(new Color(41, 128, 185));
+    /**
+     * Adds titles to the task panels.
+     */
+    private void addPanelTitles() {
+        TaskLabel todoTitle = new TaskLabel("Offene Aufgaben", UIConstants.BLUE);
+        todoTitle.setBounds(20, 15, 220, 30);
 
-        JLabel doneTitle = new JLabel("✅ Erledigte Aufgaben");
+        TaskLabel doneTitle = new TaskLabel("Erledigte Aufgaben", new Color(39, 174, 96));
         doneTitle.setBounds(20, 15, 220, 30);
-        doneTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
-        doneTitle.setForeground(new Color(39, 174, 96));
 
         todoPanel.add(todoTitle);
         donePanel.add(doneTitle);
-
-        int y = 55;
-
-        for (JCheckBox task : todoTasks) {
-            task.setBounds(20, y, 210, 30);
-            todoPanel.add(task);
-            y += 35;
-        }
-
-        y = 55;
-
-        for (JCheckBox task : doneTasks) {
-            task.setBounds(20, y, 210, 30);
-            donePanel.add(task);
-            y += 35;
-        }
-
-        updateCounter();
-
-        todoPanel.revalidate();
-        todoPanel.repaint();
-        donePanel.revalidate();
-        donePanel.repaint();
     }
 
-    private void updateCounter() {
-        int todo = todoTasks.size();
-        int done = doneTasks.size();
-        int total = todo + done;
+    /**
+     * Fills both task panels.
+     */
+    private void fillPanels() {
+        int todoY = 55;
+        int doneY = 55;
 
-        counterLabel.setText("Offen: " + todo + " | Erledigt: " + done);
+        for (Task task : tasks) {
+            if (task.isDone()) {
+                doneY = addTaskBox(donePanel, doneBoxes, task, doneY);
+            } else {
+                todoY = addTaskBox(todoPanel, todoBoxes, task, todoY);
+            }
+        }
+    }
+
+    /**
+     * Adds a task checkbox to a panel.
+     *
+     * @param panel target panel
+     * @param boxes checkbox list
+     * @param task task object
+     * @param y y position
+     * @return next y position
+     */
+    private int addTaskBox(JPanel panel, ArrayList<JCheckBox> boxes, Task task, int y) {
+        JCheckBox box = new JCheckBox(createTaskText(task));
+        box.setBounds(20, y, 210, 30);
+        box.setFont(UIConstants.NORMAL_FONT);
+        box.setBackground(Color.WHITE);
+        box.setForeground(task.isDone() ? new Color(39, 174, 96) : UIConstants.TEXT_DARK);
+        box.putClientProperty("task", task);
+
+        boxes.add(box);
+        panel.add(box);
+
+        return y + 35;
+    }
+
+    /**
+     * Creates the visible task text.
+     *
+     * @param task task object
+     * @return task text
+     */
+    private String createTaskText(Task task) {
+        if (task.isDone()) {
+            return "<html><s>✔ " + task.getText() + "</s></html>";
+        }
+
+        return task.getText();
+    }
+
+    /**
+     * Updates counter and progress bar.
+     */
+    private void updateCounter() {
+        int done = countDoneTasks();
+        int total = tasks.size();
+        int open = total - done;
+
+        counterLabel.setText("Offen: " + open + " | Erledigt: " + done);
 
         if (total == 0) {
             progressBar.setValue(0);
@@ -254,12 +375,48 @@ public class MainWindow {
         }
     }
 
+    /**
+     * Counts done tasks.
+     *
+     * @return number of done tasks
+     */
+    private int countDoneTasks() {
+        int counter = 0;
+
+        for (Task task : tasks) {
+            if (task.isDone()) {
+                counter++;
+            }
+        }
+
+        return counter;
+    }
+
+    /**
+     * Repaints panels.
+     */
+    private void repaintPanels() {
+        todoPanel.revalidate();
+        todoPanel.repaint();
+
+        donePanel.revalidate();
+        donePanel.repaint();
+    }
+
+    /**
+     * Shows a message.
+     *
+     * @param message message text
+     */
+    private void showMessage(String message) {
+        JOptionPane.showMessageDialog(frame, message);
+    }
+
+    /**
+     * Shows the frame.
+     */
     private void setupFrame() {
-        frame.setTitle("Professional ToDo App");
-        frame.setSize(620, 580);
         frame.setContentPane(mainPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 }

@@ -1,15 +1,18 @@
 package gui;
 
-import javax.swing.JButton;
-
 import util.UIConstants;
 
-public class DeleteButton extends JButton {
+/**
+ * Button for deleting selected tasks.
+ *
+ * @author Abbas
+ */
+public class DeleteButton extends AppButton {
 
+    /**
+     * Creates the delete button.
+     */
     public DeleteButton() {
-
-        super(UIConstants.DELETE_BUTTON_TEXT);
-
-        setBounds(260, 150, 100, 35);
+        super("Löschen", UIConstants.RED);
     }
 }

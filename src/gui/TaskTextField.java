@@ -1,11 +1,19 @@
 package gui;
 
 import javax.swing.JTextField;
+import util.UIConstants;
 
+/**
+ * Text field for entering a task.
+ *
+ * @author Abbas
+ */
 public class TaskTextField extends JTextField {
 
+    /**
+     * Creates the task text field.
+     */
     public TaskTextField() {
-
-        setBounds(160, 90, 220, 30);
+        setFont(UIConstants.NORMAL_FONT);
     }
 }
